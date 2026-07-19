@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KEEL — Household Cash Flow &amp; Wealth Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14181E;
+  --iron:#1C222B;
+  --iron-2:#202834;
+  --seam:#2B333F;
+  --bone:#EAE4D6;
+  --bone-dim:#9AA1AC;
+  --brass:#C39A5B;
+  --brass-dim:#8A6E42;
+  --moss:#57A773;
+  --rust:#C9584A;
+  --radius:10px;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;
+  --disp:'Big Shoulders Display',var(--sans);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--ink);
+  color:var(--bone);
+  font-family:var(--sans);
+  font-size:15px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 80px}
+
+/* ---------- header ---------- */
+header{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  padding:34px 0 22px;border-bottom:1px solid var(--seam);gap:16px;flex-wrap:wrap;
+}
+.brand h1{
+  font-family:var(--disp);font-weight:700;font-size:52px;line-height:.9;
+  letter-spacing:.04em;color:var(--bone);
+}
+.brand h1 span{color:var(--brass)}
+.brand p{color:var(--bone-dim);font-size:13px;margin-top:8px;max-width:520px}
+.hdr-actions{display:flex;gap:10px;align-items:center}
+button.ghost{
+  background:none;border:1px solid var(--seam);color:var(--bone-dim);
+  font-family:var(--mono);font-size:12px;padding:9px 16px;border-radius:7px;
+  cursor:pointer;transition:border-color .15s,color .15s;letter-spacing:.03em;
+}
+button.ghost:hover{border-color:var(--brass);color:var(--brass)}
+button.ghost:focus-visible,input:focus-visible,.chip:focus-visible,.cat-head:focus-visible{
+  outline:2px solid var(--brass);outline-offset:2px;
+}
+
+/* ---------- section labels ---------- */
+.sec{margin-top:44px}
+.sec-label{
+  display:flex;align-items:center;gap:14px;margin-bottom:18px;
+}
+.sec-label h2{
+  font-family:var(--disp);font-weight:600;font-size:24px;letter-spacing:.08em;
+  color:var(--bone);text-transform:uppercase;white-space:nowrap;
+}
+.sec-label .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--brass-dim),transparent)}
+.sec-label .note{font-family:var(--mono);font-size:11px;color:var(--bone-dim);white-space:nowrap}
+
+/* ---------- metrics strip ---------- */
+.metrics{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:1px;
+  background:var(--seam);border:1px solid var(--seam);border-radius:var(--radius);
+  overflow:hidden;margin-top:26px;
+}
+.metric{background:var(--iron);padding:16px 18px 14px}
+.metric .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--bone-dim);text-transform:uppercase}
+.metric .v{font-family:var(--mono);font-weight:600;font-size:22px;margin-top:5px;color:var(--bone)}
+.metric .v.pos{color:var(--moss)}
+.metric .v.neg{color:var(--rust)}
+.metric .sub{font-family:var(--mono);font-size:11px;color:var(--bone-dim);margin-top:2px}
+
+/* ---------- chart panel ---------- */
+.panel{
+  background:var(--iron);border:1px solid var(--seam);border-radius:var(--radius);
+  padding:20px 22px;
+}
+.chart-head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+.chart-head h3{font-family:var(--disp);font-size:19px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;color:var(--bone-dim)}
+.legend i{display:inline-block;width:16px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.legend .l-scen i{background:var(--brass)}
+.legend .l-base i{background:var(--bone-dim);height:0;border-top:2px dashed var(--bone-dim)}
+.legend .l-tight i{background:var(--rust);opacity:.5;height:10px}
+#chart{width:100%;height:auto;display:block}
+.chart-ctl{display:flex;align-items:center;gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--seam);flex-wrap:wrap}
+.chart-ctl label{font-family:var(--mono);font-size:11px;color:var(--bone-dim);letter-spacing:.05em}
+.chart-ctl .val{font-family:var(--mono);font-size:12px;color:var(--brass);min-width:64px}
+.chart-ctl select{
+  background:var(--iron-2);color:var(--bone);border:1px solid var(--seam);
+  font-family:var(--mono);font-size:12px;padding:7px 10px;border-radius:7px;cursor:pointer;
+}
+.chart-ctl select:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+
+/* tight chips */
+.tights{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.tight-chip{
+  font-family:var(--mono);font-size:11.5px;color:var(--rust);
+  border:1px solid rgba(201,88,74,.45);background:rgba(201,88,74,.08);
+  padding:5px 11px;border-radius:6px;
+}
+.tights .clear{color:var(--moss);border-color:rgba(87,167,115,.4);background:rgba(87,167,115,.07)}
+
+/* ---------- two-column controls ---------- */
+.cols{display:grid;grid-template-columns:5fr 7fr;gap:22px}
+
+/* slider row */
+.srow{padding:13px 0;border-bottom:1px solid var(--seam)}
+.srow:last-child{border-bottom:none}
+.srow .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.srow .name{font-size:13.5px;font-weight:500;color:var(--bone)}
+.srow .amt{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--bone)}
+.srow .amt .delta{font-size:11px;font-weight:400;margin-left:7px}
+.delta.up{color:var(--rust)}.delta.down{color:var(--moss)}.delta.zero{color:var(--bone-dim)}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:26px;background:transparent;cursor:pointer;margin-top:2px;
+}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:var(--seam)}
+input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--seam)}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:var(--brass);border:2px solid var(--ink);margin-top:-6px;
+  box-shadow:0 0 0 1px var(--brass-dim);transition:transform .1s;
+}
+input[type=range]::-moz-range-thumb{
+  width:13px;height:13px;border-radius:50%;background:var(--brass);
+  border:2px solid var(--ink);box-shadow:0 0 0 1px var(--brass-dim);
+}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2)}
+.srow .meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;color:var(--bone-dim)}
+
+/* category expandable */
+.cat-head{
+  width:100%;display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  background:none;border:none;color:inherit;font:inherit;cursor:pointer;text-align:left;padding:0;
+}
+.cat-head .name{font-size:13.5px;font-weight:500}
+.cat-head .caret{font-family:var(--mono);font-size:10px;color:var(--bone-dim);margin-left:7px;transition:color .15s}
+.cat-head:hover .caret{color:var(--brass)}
+.items{display:none;margin:9px 0 4px;border-left:2px solid var(--seam);padding-left:12px}
+.items.open{display:block}
+.items div{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11.5px;color:var(--bone-dim);padding:2.5px 0}
+.items div span:last-child{color:var(--bone)}
+
+/* income schedule footnote */
+.sched{font-family:var(--mono);font-size:11px;color:var(--bone-dim);margin-top:14px;padding-top:12px;border-top:1px solid var(--seam);line-height:1.9}
+.sched b{color:var(--brass);font-weight:500}
+
+/* ---------- loans ---------- */
+.ballast{grid-template-columns:1fr 1fr}
+.loan-tag{font-family:var(--mono);font-size:11.5px;color:var(--bone-dim)}
+.loan-tag b{color:var(--brass);font-weight:500}
+.loan-stats{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--seam);
+  border:1px solid var(--seam);border-radius:8px;overflow:hidden;margin-top:12px;
+}
+.loan-stats>div{background:var(--iron-2);padding:10px 12px}
+.loan-stats .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;color:var(--bone-dim);text-transform:uppercase;display:block}
+.loan-stats .v{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--bone);margin-top:3px;display:block}
+.loan-stats .v.ok{color:var(--moss)}
+.loan-stats .v.late{color:var(--rust)}
+.loan-stats .v.brass{color:var(--brass)}
+@media(max-width:560px){.loan-stats{grid-template-columns:repeat(2,1fr)}}
+
+/* ---------- wealth ---------- */
+.wealth{display:grid;grid-template-columns:5fr 7fr;gap:22px;align-items:stretch}
+.horizons{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--seam);border:1px solid var(--seam);border-radius:var(--radius);overflow:hidden;margin-top:16px}
+.hz{background:var(--iron-2);padding:14px 16px;text-align:left}
+.hz .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--bone-dim)}
+.hz .v{font-family:var(--mono);font-weight:600;font-size:19px;color:var(--brass);margin-top:4px}
+#wchart{width:100%;height:auto;display:block;margin-top:6px}
+.wealth-note{font-size:12.5px;color:var(--bone-dim);margin-top:14px;line-height:1.6}
+.wealth-note b{color:var(--bone);font-weight:600}
+
+/* ---------- footer ---------- */
+footer{
+  margin-top:56px;padding-top:20px;border-top:1px solid var(--seam);
+  font-family:var(--mono);font-size:11px;color:var(--bone-dim);line-height:2;
+}
+footer b{color:var(--brass-dim);font-weight:500}
+
+/* ---------- responsive ---------- */
+@media(max-width:920px){
+  .cols,.wealth{grid-template-columns:1fr}
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  .metric:last-child{grid-column:1/-1}
+  .brand h1{font-size:40px}
+}
+@media(prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brand">
+    <h1>KEEL<span>.</span></h1>
+    <p>The keel is what keeps a vessel steady in rough water. Adjust the levers below, watch the waterline — and steer the household from staying afloat to building wealth that outlasts you.</p>
+  </div>
+  <div class="hdr-actions">
+    <button class="ghost" id="btnReset" title="Restore your actual budget numbers">Reset to actuals</button>
+  </div>
+</header>
+
+<!-- metrics -->
+<div class="metrics" id="metrics"></div>
+
+<!-- chart -->
+<section class="sec">
+  <div class="sec-label">
+    <h2>The Waterline</h2>
+    <div class="rule"></div>
+    <span class="note">household balance · next 12 months · daily</span>
+  </div>
+  <div class="panel">
+    <div class="chart-head">
+      <h3 id="chartTitle">Cash on hand</h3>
+      <div class="legend">
+        <span class="l-scen"><i></i>scenario</span>
+        <span class="l-base"><i></i>your actuals</span>
+        <span class="l-tight"><i></i>tight water</span>
+      </div>
+    </div>
+    <svg id="chart" viewBox="0 0 1000 400" role="img" aria-label="Projected household cash balance over the next twelve months"></svg>
+    <div class="chart-ctl">
+      <label for="sStart">Cash on hand today</label>
+      <input type="range" id="sStart" min="0" max="15000" step="100" style="flex:1;min-width:120px">
+      <span class="val" id="vStart"></span>
+      <label for="sBuffer">Comfort buffer</label>
+      <input type="range" id="sBuffer" min="0" max="5000" step="100" style="flex:1;min-width:120px">
+      <span class="val" id="vBuffer"></span>
+      <label for="selBills">Bills hit</label>
+      <select id="selBills">
+        <option value="split">1st &amp; 15th</option>
+        <option value="first">All on the 1st</option>
+        <option value="spread">Spread daily</option>
+      </select>
+    </div>
+    <div class="tights" id="tights"></div>
+  </div>
+</section>
+
+<!-- controls -->
+<section class="sec">
+  <div class="sec-label">
+    <h2>The Levers</h2>
+    <div class="rule"></div>
+    <span class="note">drag anything · chart answers instantly</span>
+  </div>
+  <div class="cols">
+    <div class="panel">
+      <div class="chart-head"><h3>Income</h3></div>
+      <div id="incomeSliders"></div>
+      <div class="sched" id="sched"></div>
+    </div>
+    <div class="panel">
+      <div class="chart-head"><h3>Monthly spend</h3><span class="legend" style="font-size:11px" id="spendTotal"></span></div>
+      <div id="spendSliders"></div>
+    </div>
+  </div>
+</section>
+
+<!-- loans -->
+<section class="sec">
+  <div class="sec-label">
+    <h2>The Ballast</h2>
+    <div class="rule"></div>
+    <span class="note">pay it down · cut it loose · every freed dollar returns to the surplus</span>
+  </div>
+  <div class="cols ballast" id="loanCards"></div>
+</section>
+
+<!-- wealth -->
+<section class="sec">
+  <div class="sec-label">
+    <h2>The Long Game</h2>
+    <div class="rule"></div>
+    <span class="note">surplus, invested · compound growth</span>
+  </div>
+  <div class="wealth">
+    <div class="panel">
+      <div class="chart-head"><h3>Build the estate</h3></div>
+      <div id="wealthSliders"></div>
+      <div class="horizons" id="horizons"></div>
+      <p class="wealth-note" id="wealthNote"></p>
+    </div>
+    <div class="panel">
+      <div class="chart-head"><h3>30-year trajectory</h3>
+        <div class="legend"><span class="l-scen"><i></i>invested &amp; compounding</span><span class="l-base"><i></i>contributions alone</span></div>
+      </div>
+      <svg id="wchart" viewBox="0 0 640 340" role="img" aria-label="Thirty year compound growth of invested surplus"></svg>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <b>Anchors:</b> paychecks every other Thursday from Jul 16 2026 · stock distributions quarterly from Sep 8 2026 · bonus lands the second Thursday of May · category bills debit per the timing you choose · loan payments debit the 1st and stop the month each balance clears.<br>
+  Figures are after-tax and drawn from your own ledger. This is a planning instrument, not financial advice — the wealth projection assumes a steady average return and no taxes on growth; real markets move in swells.
+</footer>
+
+</div>
+<script>
+/* ============================================================
+   KEEL — data
+   Baseline figures come straight from the household ledger.
+============================================================ */
+const BASE = {
+  paycheck: 3030,          // after tax, every other Thursday
+  stock: 4400,             // quarterly distribution, after tax
+  bonus: 10000,            // annual, 2nd week of May
+  categories: [
+    {id:'housing', name:'Housing', amount:4218.21, items:[
+      ['Mortgage',2905.77],['Cellular service',364.97],['Natural gas',250.00],
+      ['Electric',250.00],['Internet',145.65],['Trash & water',125.00],
+      ['Home maintenance',100.00],['Pest control',76.82]]},
+    {id:'basic', name:'Groceries & essentials', amount:1230.00, items:[
+      ['Groceries',1000.00],['Pet care',100.00],['Household care',80.00],['Hygiene',50.00]]},
+    {id:'auto', name:'Automotive', amount:846.00, items:[
+      ['Allstate insurance',346.00],['Fuel',200.00],['Armada payment',200.00],['Maintenance',100.00]]},
+    {id:'lux', name:'Lifestyle', amount:502.64, items:[
+      ['Restaurants',100.00],['Date nights',100.00],['Coffee & lunch',100.00],
+      ['Spending — TD',87.97],['Spending — MW',64.67],['Clothing',50.00]]},
+    {id:'kids', name:'Children', amount:425.48, items:[
+      ['Support',200.00],['Arthur flights',175.00],['Planet Fitness',50.48]]},
+    {id:'debt', name:'Debts', amount:379.00, items:[
+      ['Student loans — Wes',379.00],['Credit card',0.00]]},
+    {id:'save', name:'Sinking funds', amount:333.32, items:[
+      ['Birthdays',83.33],['Christmas',83.33],['Vacation',83.33],['Emergencies',83.33]]},
+    {id:'health', name:'Health', amount:200.00, items:[
+      ['Supplements',100.00],['Co-pays',50.00],['Medications',50.00]]},
+    {id:'subs', name:'Apps & subscriptions', amount:135.22, items:[
+      ['Claude',20.00],['Netflix',19.74],['Audible',16.00],['Pandora',12.03],['Spotify',11.99],
+      ['Prime',11.58],['iCloud+',9.99],['Office 365',8.33],['Prime ad-free',4.99],['Walmart+',4.08],
+      ['AppleCare+ iPad',3.49],['Human Design',3.34],['LastPass',3.00],['AllTrails',3.00],
+      ['Google One — MW',1.99],['Google One — TD',1.67]]},
+  ]
+};
+const PAY_ANCHOR = new Date(2026, 6, 16);   // Thu Jul 16 2026 — last payday
+const STOCK_ANCHOR = new Date(2026, 8, 8);  // Sep 8 2026, then every 3 months
+const SIM_DAYS = 372;
+
+/* loans — tracked separately so payoff strategy is a lever of its own */
+BASE.loans = [
+  {id:'la', name:'Short-haul loan', balance:8435, rate:0.01, deadline:new Date(2027,9,1), deadlineLabel:'Oct 2027'},
+  {id:'lb', name:'Long-haul loan', balance:30000, rate:0.071, deadline:null, deadlineMonths:120, deadlineLabel:'10 years'},
+];
+function nextFirst(){ const t=new Date(); t.setHours(0,0,0,0); return new Date(t.getFullYear(), t.getMonth()+1, 1); }
+function monthsBetween(a,b){ return (b.getFullYear()-a.getFullYear())*12 + b.getMonth()-a.getMonth(); }
+function minPayment(P,annual,n){ const r=annual/12; return r>0 ? P*r/(1-Math.pow(1+r,-n)) : P/n; }
+BASE.loans.forEach(l=>{
+  l.dlMonths = l.deadlineMonths || (monthsBetween(nextFirst(), l.deadline)+1);
+  l.min = Math.ceil(minPayment(l.balance, l.rate, l.dlMonths)/5)*5;
+  l.max = Math.ceil(minPayment(l.balance, l.rate, Math.max(5, Math.round(l.dlMonths/5)))/25)*25;
+});
+function amortize(l, pay){
+  const r=l.rate/12; let b=l.balance, interest=0, m=0;
+  while(b>0.005 && m<720){ const i=b*r; interest+=i; b=Math.max(b+i-pay,0); m++; }
+  return {months:m, interest, stuck:b>0.005};
+}
+
+/* ============================================================
+   state
+============================================================ */
+const defaultState = () => ({
+  paycheck: BASE.paycheck, stock: BASE.stock, bonus: BASE.bonus,
+  cats: Object.fromEntries(BASE.categories.map(c=>[c.id, c.amount])),
+  loanPay: Object.fromEntries(BASE.loans.map(l=>[l.id, l.min])),
+  start: 3000, buffer: 1000, billMode: 'split',
+  investShare: 100, ret: 7,
+});
+let S = defaultState();
+try{
+  const saved = localStorage.getItem('keel-state');
+  if(saved){ S = Object.assign(defaultState(), JSON.parse(saved)); }
+}catch(e){}
+function persist(){ try{ localStorage.setItem('keel-state', JSON.stringify(S)); }catch(e){} }
+
+/* ============================================================
+   helpers
+============================================================ */
+const $ = id => document.getElementById(id);
+const fmt = n => (n<0?'−$':'$') + Math.round(Math.abs(n)).toLocaleString('en-US');
+const fmtK = n => {
+  const a = Math.abs(n), s = n<0?'−':'';
+  if(a>=1e6) return s+'$'+(a/1e6).toFixed(a>=1e7?1:2)+'M';
+  if(a>=1e3) return s+'$'+Math.round(a/1e3)+'k';
+  return s+'$'+Math.round(a);
+};
+const dShort = d => d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+function secondThursdayOfMay(year){
+  const d = new Date(year,4,1);
+  const offset = (4 - d.getDay() + 7) % 7;  // 4 = Thursday
+  return new Date(year, 4, 1 + offset + 7);
+}
+
+/* ============================================================
+   cash-flow engine — day-by-day simulation
+============================================================ */
+function simulate(p){
+  const t0 = new Date(); t0.setHours(0,0,0,0);
+  const catTotal = BASE.categories.reduce((s,c)=>s+p.cats[c.id],0);
+  const loanPayTotal = BASE.loans.reduce((s,l)=>s+p.loanPay[l.id],0);
+  const loanBals = Object.fromEntries(BASE.loans.map(l=>[l.id, l.balance]));
+  const days = [], events = [];
+  let bal = p.start;
+  for(let i=0;i<SIM_DAYS;i++){
+    const d = new Date(t0); d.setDate(t0.getDate()+i);
+    // category bills — timing per selected mode
+    if(i>0){
+      const mode = p.billMode || 'split';
+      if(mode==='first'){ if(d.getDate()===1) bal -= catTotal; }
+      else if(mode==='split'){ if(d.getDate()===1||d.getDate()===15) bal -= catTotal/2; }
+      else { bal -= catTotal*12/365; }
+    }
+    // loan payments — always on the 1st, and they stop when the balance hits zero
+    if(i>0 && d.getDate()===1){
+      BASE.loans.forEach(l=>{
+        let b = loanBals[l.id];
+        if(b>0.005){
+          const int = b*l.rate/12;
+          const pay = Math.min(p.loanPay[l.id], b+int);
+          loanBals[l.id] = b+int-pay;
+          bal -= pay;
+          if(loanBals[l.id]<=0.005) events.push({d:new Date(d), kind:'payoff', label:l.name});
+        }
+      });
+    }
+    // paycheck: every 14 days from anchor
+    const diff = Math.round((d - PAY_ANCHOR)/86400000);
+    if(i>0 && diff>0 && diff%14===0){ bal += p.paycheck; }
+    // stock: quarterly from Sep 8 2026
+    if(i>0 && d.getDate()===STOCK_ANCHOR.getDate()){
+      const m = (d.getFullYear()-STOCK_ANCHOR.getFullYear())*12 + d.getMonth()-STOCK_ANCHOR.getMonth();
+      if(m>=0 && m%3===0){ bal += p.stock; events.push({d:new Date(d), kind:'stock'}); }
+    }
+    // bonus: 2nd Thursday of May
+    const bt = secondThursdayOfMay(d.getFullYear());
+    if(i>0 && d.getTime()===bt.getTime()){ bal += p.bonus; events.push({d:new Date(d), kind:'bonus'}); }
+    days.push({d, bal});
+  }
+  // loan payoff schedules (months from first payment)
+  const loans = BASE.loans.map(l=> Object.assign({id:l.id, pay:p.loanPay[l.id]}, amortize(l, p.loanPay[l.id])));
+  // annual + averages (present-state: all loans still active)
+  const monthly = catTotal + loanPayTotal;
+  const annualIncome = p.paycheck*26 + p.stock*4 + p.bonus;
+  const annualSpend = monthly*12;
+  return {
+    days, events, monthly, catTotal, loans,
+    monthlyIncome: annualIncome/12,
+    monthlyNet: (annualIncome-annualSpend)/12,
+    savingsRate: annualIncome>0 ? (annualIncome-annualSpend)/annualIncome : 0,
+    endBal: days[days.length-1].bal,
+    low: days.reduce((m,x)=> x.bal<m.bal?x:m, days[0]),
+  };
+}
+const baselineParams = () => ({
+  paycheck:BASE.paycheck, stock:BASE.stock, bonus:BASE.bonus,
+  cats:Object.fromEntries(BASE.categories.map(c=>[c.id,c.amount])),
+  loanPay:Object.fromEntries(BASE.loans.map(l=>[l.id,l.min])),
+  start:S.start, billMode:S.billMode,
+});
+
+/* ============================================================
+   metrics
+============================================================ */
+function renderMetrics(sim){
+  const net = sim.monthlyNet;
+  const rate = Math.round(sim.savingsRate*100);
+  $('metrics').innerHTML = `
+    <div class="metric"><div class="k">Monthly income · avg</div><div class="v">${fmt(sim.monthlyIncome)}</div><div class="sub">checks + stock + bonus</div></div>
+    <div class="metric"><div class="k">Monthly spend</div><div class="v">${fmt(sim.monthly)}</div><div class="sub">categories + loan payments</div></div>
+    <div class="metric"><div class="k">Monthly surplus</div><div class="v ${net>=0?'pos':'neg'}">${fmt(net)}</div><div class="sub">${net>=0?'building':'burning'} ${fmt(Math.abs(net*12))}/yr</div></div>
+    <div class="metric"><div class="k">Savings rate</div><div class="v ${rate>=0?'':'neg'}">${rate}%</div><div class="sub">of every dollar in</div></div>
+    <div class="metric"><div class="k">Lowest point</div><div class="v ${sim.low.bal<0?'neg':(sim.low.bal<S.buffer?'':'pos')}">${fmt(sim.low.bal)}</div><div class="sub">${dShort(sim.low.d)}</div></div>`;
+}
+
+/* ============================================================
+   waterline chart
+============================================================ */
+function renderChart(scen, base){
+  const narrow = window.innerWidth < 640;
+  const W=narrow?560:1000, H=narrow?360:400, L=narrow?46:58, R=narrow?10:14, T=18, B=34;
+  $('chart').setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const pw=W-L-R, ph=H-T-B;
+  const all = scen.days.map(x=>x.bal).concat(base.days.map(x=>x.bal),[0,S.buffer]);
+  let lo=Math.min(...all), hi=Math.max(...all);
+  const pad=(hi-lo)*0.08||500; lo-=pad; hi+=pad;
+  const X=i=> L + pw*i/(SIM_DAYS-1);
+  const Y=v=> T + ph*(1-(v-lo)/(hi-lo));
+  const path=days=> days.map((x,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(x.bal).toFixed(1)).join('');
+  let s='';
+
+  // tight-water floods (scenario below buffer)
+  let runs=[],st=null;
+  scen.days.forEach((x,i)=>{ if(x.bal<S.buffer){ if(st===null)st=i; } else if(st!==null){ runs.push([st,i-1]); st=null; }});
+  if(st!==null) runs.push([st,SIM_DAYS-1]);
+  runs.forEach(([a,b])=>{
+    s+=`<rect x="${X(a).toFixed(1)}" y="${T}" width="${Math.max(X(b)-X(a),1.5).toFixed(1)}" height="${ph}" fill="#C9584A" opacity="0.10"/>`;
+  });
+
+  // month gridlines + labels
+  scen.days.forEach((x,i)=>{
+    if(i>0 && x.d.getDate()===1){
+      s+=`<line x1="${X(i).toFixed(1)}" y1="${T}" x2="${X(i).toFixed(1)}" y2="${T+ph}" stroke="#2B333F" stroke-width="1"/>`;
+      s+=`<text x="${X(i)+4}" y="${H-12}" fill="#9AA1AC" font-size="11" font-family="IBM Plex Mono">${x.d.toLocaleDateString('en-US',{month:'short'})}</text>`;
+    }
+  });
+
+  // y gridlines
+  const step = (hi-lo)>40000?10000:(hi-lo)>16000?5000:2000;
+  for(let v=Math.ceil(lo/step)*step; v<hi; v+=step){
+    s+=`<line x1="${L}" y1="${Y(v).toFixed(1)}" x2="${W-R}" y2="${Y(v).toFixed(1)}" stroke="#232B36" stroke-width="1"/>`;
+    s+=`<text x="${L-8}" y="${Y(v)+4}" text-anchor="end" fill="#9AA1AC" font-size="11" font-family="IBM Plex Mono">${fmtK(v)}</text>`;
+  }
+
+  // zero line + buffer waterline
+  if(lo<0) s+=`<line x1="${L}" y1="${Y(0).toFixed(1)}" x2="${W-R}" y2="${Y(0).toFixed(1)}" stroke="#C9584A" stroke-width="1.4" stroke-dasharray="2 3"/>`;
+  s+=`<line x1="${L}" y1="${Y(S.buffer).toFixed(1)}" x2="${W-R}" y2="${Y(S.buffer).toFixed(1)}" stroke="#8A6E42" stroke-width="1" stroke-dasharray="6 4"/>`;
+  s+=`<text x="${W-R}" y="${Y(S.buffer)-6}" text-anchor="end" fill="#8A6E42" font-size="10.5" font-family="IBM Plex Mono">buffer ${fmt(S.buffer)}</text>`;
+
+  // baseline ghost
+  s+=`<path d="${path(base.days)}" fill="none" stroke="#9AA1AC" stroke-width="1.4" stroke-dasharray="5 5" opacity="0.55"/>`;
+
+  // scenario fill + line
+  const p0=path(scen.days);
+  s+=`<path d="${p0} L ${X(SIM_DAYS-1).toFixed(1)} ${Y(Math.max(lo,0)).toFixed(1)} L ${L} ${Y(Math.max(lo,0)).toFixed(1)} Z" fill="url(#gfill)" opacity="0.9"/>`;
+  s+=`<path d="${p0}" fill="none" stroke="#C39A5B" stroke-width="2.4" stroke-linejoin="round"/>`;
+
+  // event markers
+  scen.events.forEach(ev=>{
+    const i=Math.round((ev.d - scen.days[0].d)/86400000); if(i<0||i>=SIM_DAYS)return;
+    const bal=scen.days[i].bal;
+    if(ev.kind==='payoff'){
+      s+=`<line x1="${X(i).toFixed(1)}" y1="${T}" x2="${X(i).toFixed(1)}" y2="${T+ph}" stroke="#C39A5B" stroke-width="1" stroke-dasharray="3 3" opacity="0.7"/>`;
+      s+=`<text x="${X(i).toFixed(1)}" y="${T+12}" text-anchor="middle" fill="#C39A5B" font-size="10" font-family="IBM Plex Mono">⚑ loan paid</text>`;
+      return;
+    }
+    const sym = ev.kind==='bonus' ? '★' : '◆';
+    const label = ev.kind==='bonus' ? 'bonus' : 'stock';
+    s+=`<text x="${X(i).toFixed(1)}" y="${(Y(bal)-10).toFixed(1)}" text-anchor="middle" fill="#57A773" font-size="12" font-family="IBM Plex Mono">${sym}</text>`;
+    s+=`<text x="${X(i).toFixed(1)}" y="${(Y(bal)-22).toFixed(1)}" text-anchor="middle" fill="#57A773" font-size="9.5" font-family="IBM Plex Mono">${label}</text>`;
+  });
+
+  $('chart').innerHTML = `<defs><linearGradient id="gfill" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#C39A5B" stop-opacity="0.22"/>
+    <stop offset="1" stop-color="#C39A5B" stop-opacity="0.02"/></linearGradient></defs>`+s;
+
+  // tight chips
+  const chips = runs.map(([a,b])=>{
+    const minB = Math.min(...scen.days.slice(a,b+1).map(x=>x.bal));
+    return `<span class="tight-chip">${dShort(scen.days[a].d)} – ${dShort(scen.days[b].d)} · dips to ${fmt(minB)}</span>`;
+  });
+  $('tights').innerHTML = chips.length
+    ? `<span style="font-family:var(--mono);font-size:11px;color:var(--bone-dim);align-self:center">Tight water:</span>`+chips.join('')
+    : `<span class="tight-chip clear">Clear sailing — balance holds above your ${fmt(S.buffer)} buffer all twelve months.</span>`;
+}
+
+/* ============================================================
+   sliders
+============================================================ */
+function sliderRow({id,name,val,base,min,max,step,fmtFn,detail,zeroLabel}){
+  const zl = zeroLabel||'at actual';
+  const d = val-base;
+  const deltaCls = d>0.5?'up':d<-0.5?'down':'zero';
+  const deltaTxt = Math.abs(d)<0.5?zl:(d>0?'+':'−')+fmt(Math.abs(d)).slice(1);
+  const head = detail
+    ? `<button class="cat-head" data-toggle="${id}" aria-expanded="false"><span class="name">${name}<span class="caret">▸ details</span></span><span class="amt" id="amt-${id}">${fmtFn(val)}<span class="delta ${deltaCls}" id="dl-${id}">${deltaTxt}</span></span></button>
+       <div class="items" id="items-${id}">${detail.map(([n,a])=>`<div><span>${n}</span><span>${fmt(a)}</span></div>`).join('')}</div>`
+    : `<div class="top"><span class="name">${name}</span><span class="amt" id="amt-${id}">${fmtFn(val)}<span class="delta ${deltaCls}" id="dl-${id}">${deltaTxt}</span></span></div>`;
+  return `<div class="srow">${head}
+    <input type="range" id="s-${id}" min="${min}" max="${max}" step="${step}" value="${val}" aria-label="${name}">
+    <div class="meta"><span>${fmtFn(min)}</span><span>${fmtFn(max)}</span></div></div>`;
+}
+function updateRow(id,val,base,fmtFn,zeroLabel){
+  $('amt-'+id).childNodes[0].textContent = fmtFn(val);
+  const d=val-base, el=$('dl-'+id);
+  el.className='delta '+(d>0.5?'up':d<-0.5?'down':'zero');
+  el.textContent = Math.abs(d)<0.5?(zeroLabel||'at actual'):(d>0?'+':'−')+fmt(Math.abs(d)).slice(1);
+}
+
+function buildControls(){
+  // income
+  $('incomeSliders').innerHTML =
+    sliderRow({id:'pay',name:'Paycheck · every other Thursday',val:S.paycheck,base:BASE.paycheck,min:1500,max:5500,step:10,fmtFn:fmt}) +
+    sliderRow({id:'stock',name:'Stock distribution · quarterly',val:S.stock,base:BASE.stock,min:0,max:9000,step:100,fmtFn:fmt}) +
+    sliderRow({id:'bonus',name:'Annual bonus · May',val:S.bonus,base:BASE.bonus,min:0,max:25000,step:250,fmtFn:fmt});
+  // schedule footnote
+  const nextChecks=[]; let d=new Date(PAY_ANCHOR);
+  const today=new Date(); today.setHours(0,0,0,0);
+  while(nextChecks.length<3){ d=new Date(d); d.setDate(d.getDate()+14); if(d>today) nextChecks.push(dShort(d)); }
+  $('sched').innerHTML = `Next paychecks <b>${nextChecks.join(' · ')}</b><br>Next stock <b>${dShort(STOCK_ANCHOR)}</b> · next bonus <b>${dShort(secondThursdayOfMay(today.getMonth()>4||today>secondThursdayOfMay(today.getFullYear())?today.getFullYear()+1:today.getFullYear()))}</b>`;
+  // spend
+  $('spendSliders').innerHTML = BASE.categories.map(c=>{
+    const max = Math.ceil(Math.max(c.amount*1.6,100)/50)*50;
+    return sliderRow({id:c.id,name:c.name,val:S.cats[c.id],base:c.amount,min:0,max,step:5,fmtFn:fmt,detail:c.items});
+  }).join('');
+  // wealth
+  $('wealthSliders').innerHTML =
+    sliderRow({id:'share',name:'Share of surplus you invest',val:S.investShare,base:100,min:0,max:100,step:5,fmtFn:v=>Math.round(v)+'%'}) +
+    sliderRow({id:'ret',name:'Average annual return',val:S.ret,base:7,min:2,max:12,step:0.5,fmtFn:v=>v.toFixed(1)+'%'});
+
+  // wire toggles
+  document.querySelectorAll('[data-toggle]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const box=$('items-'+btn.dataset.toggle);
+      const open=box.classList.toggle('open');
+      btn.setAttribute('aria-expanded',open);
+      btn.querySelector('.caret').textContent = open?'▾ details':'▸ details';
+    });
+  });
+  // wire sliders
+  const bind=(id,fn)=> $('s-'+id).addEventListener('input',e=>{ fn(parseFloat(e.target.value)); recompute(); });
+  bind('pay', v=>{S.paycheck=v; updateRow('pay',v,BASE.paycheck,fmt);});
+  bind('stock',v=>{S.stock=v; updateRow('stock',v,BASE.stock,fmt);});
+  bind('bonus',v=>{S.bonus=v; updateRow('bonus',v,BASE.bonus,fmt);});
+  BASE.categories.forEach(c=> bind(c.id, v=>{S.cats[c.id]=v; updateRow(c.id,v,c.amount,fmt);}));
+  bind('share',v=>{S.investShare=v; updateRow('share',v,100,x=>Math.round(x)+'%');});
+  bind('ret', v=>{S.ret=v; updateRow('ret',v,7,x=>x.toFixed(1)+'%');});
+
+  $('sStart').value=S.start; $('sBuffer').value=S.buffer; $('selBills').value=S.billMode;
+  $('sStart').addEventListener('input',e=>{S.start=parseFloat(e.target.value); recompute();});
+  $('sBuffer').addEventListener('input',e=>{S.buffer=parseFloat(e.target.value); recompute();});
+  $('selBills').addEventListener('change',e=>{S.billMode=e.target.value; recompute();});
+}
+
+/* ============================================================
+   loans — the ballast
+============================================================ */
+const fmtMY = d => d.toLocaleDateString('en-US',{month:'short',year:'numeric'});
+function addMonths(d,m){ return new Date(d.getFullYear(), d.getMonth()+m, 1); }
+
+function buildLoanCards(){
+  $('loanCards').innerHTML = BASE.loans.map(l=>`
+    <div class="panel">
+      <div class="chart-head">
+        <h3>${l.name}</h3>
+        <span class="loan-tag"><b>${fmt(l.balance)}</b> · ${(l.rate*100).toFixed(1)}% APR · due ${l.deadlineLabel}</span>
+      </div>
+      ${sliderRow({id:l.id, name:'Monthly payment', val:S.loanPay[l.id], base:l.min, min:l.min, max:l.max, step:5, fmtFn:fmt, zeroLabel:'at minimum'})}
+      <div class="loan-stats" id="ls-${l.id}"></div>
+    </div>`).join('');
+  BASE.loans.forEach(l=>{
+    $('s-'+l.id).addEventListener('input',e=>{
+      S.loanPay[l.id]=parseFloat(e.target.value);
+      updateRow(l.id, S.loanPay[l.id], l.min, fmt, 'at minimum');
+      recompute();
+    });
+  });
+}
+function renderLoans(scen){
+  const fp = nextFirst();
+  BASE.loans.forEach(l=>{
+    const a = scen.loans.find(x=>x.id===l.id);
+    const payoff = addMonths(fp, a.months-1);
+    const early = l.dlMonths - a.months;
+    const dl = early>=0
+      ? `<span class="v ok">${early===0?'right on time':early+' mo early'}</span>`
+      : `<span class="v late">misses by ${-early} mo</span>`;
+    $('ls-'+l.id).innerHTML = `
+      <div><span class="k">Paid off</span><span class="v brass">${fmtMY(payoff)}</span></div>
+      <div><span class="k">Total interest</span><span class="v">${fmt(a.interest)}</span></div>
+      <div><span class="k">vs deadline</span>${dl}</div>
+      <div><span class="k">Then freed up</span><span class="v ok">+${fmt(a.pay)}/mo</span></div>`;
+  });
+}
+
+/* ============================================================
+   wealth projection
+============================================================ */
+function renderWealth(sim){
+  const r = S.ret/100/12;
+  const share = S.investShare/100;
+  // contribution in month m: net + every loan payment already retired by then
+  const contrib = m => {
+    let extra = 0;
+    sim.loans.forEach(l=>{ if(l.months<=m) extra += l.pay; });
+    return Math.max(sim.monthlyNet + extra, 0) * share;
+  };
+  const N=360;
+  const fvArr=[0], cumArr=[0];
+  for(let m=1;m<=N;m++){
+    fvArr[m] = fvArr[m-1]*(1+r) + contrib(m-1);
+    cumArr[m] = cumArr[m-1] + contrib(m-1);
+  }
+  $('horizons').innerHTML = [10,20,30].map(y=>
+    `<div class="hz"><div class="k">${y} YRS</div><div class="v">${fmtK(fvArr[y*12])}</div></div>`).join('');
+
+  const lastPayoff = Math.max(...sim.loans.map(l=>l.months));
+  const freed = sim.loans.reduce((s,l)=>s+l.pay,0);
+  const netAfter = sim.monthlyNet + freed;
+  if(sim.monthlyNet>0){
+    $('wealthNote').innerHTML =
+      `Investing <b>${fmt(contrib(0))}/mo</b> now — rising to <b>${fmt(contrib(lastPayoff))}/mo</b> once both loans clear — grows to <b>${fmtK(fvArr[N])}</b> in 30 years at ${S.ret.toFixed(1)}%. Only <b>${fmtK(cumArr[N])}</b> of that is money you put in; the rest is time doing the work. That's the seed of generational wealth: assets that outlive the paychecks that bought them.`;
+  } else if(netAfter>0){
+    $('wealthNote').innerHTML =
+      `Loan payments put the household <b>${fmt(Math.abs(sim.monthlyNet))}/mo</b> underwater for now — but when the ballast is cut loose, <b>+${fmt(freed)}/mo</b> comes back and the surplus turns to <b>${fmt(netAfter)}/mo</b>. Staying the course still builds <b>${fmtK(fvArr[N])}</b> over 30 years. Trim the levers above if the tight water on the chart runs too deep to hold until then.`;
+  } else {
+    $('wealthNote').innerHTML =
+      `Even after the loans clear, the household runs a <b>${fmt(Math.abs(netAfter))}/mo</b> deficit — there's no surplus to invest on this course. Pull the spend levers until the surplus turns green, then watch this panel come alive.`;
+  }
+
+  // chart
+  const W=640,H=340,L=54,R2=12,T=14,B=30, pw=W-L-R2, ph=H-T-B;
+  const top=Math.max(fvArr[N],cumArr[N],1000)*1.06;
+  const X=m=>L+pw*m/N, Y=v=>T+ph*(1-v/top);
+  let s='';
+  for(let y=5;y<=30;y+=5){
+    s+=`<line x1="${X(y*12).toFixed(1)}" y1="${T}" x2="${X(y*12).toFixed(1)}" y2="${T+ph}" stroke="#232B36"/>`;
+    s+=`<text x="${X(y*12).toFixed(1)}" y="${H-10}" text-anchor="middle" fill="#9AA1AC" font-size="11" font-family="IBM Plex Mono">${y}y</text>`;
+  }
+  [0.25,0.5,0.75,1].forEach(f=>{
+    s+=`<line x1="${L}" y1="${Y(top*f).toFixed(1)}" x2="${W-R2}" y2="${Y(top*f).toFixed(1)}" stroke="#232B36"/>`;
+    s+=`<text x="${L-7}" y="${Y(top*f)+4}" text-anchor="end" fill="#9AA1AC" font-size="11" font-family="IBM Plex Mono">${fmtK(top*f)}</text>`;
+  });
+  const line=(arr,attrs)=>{
+    let p=''; for(let m=0;m<=N;m+=3) p+=(m?'L':'M')+X(m).toFixed(1)+' '+Y(arr[m]).toFixed(1);
+    return `<path d="${p}" fill="none" ${attrs}/>`;
+  };
+  let fill=''; for(let m=0;m<=N;m+=3) fill+=(m?'L':'M')+X(m).toFixed(1)+' '+Y(fvArr[m]).toFixed(1);
+  s+=`<path d="${fill} L ${X(N).toFixed(1)} ${Y(0)} L ${L} ${Y(0)} Z" fill="url(#wfill)"/>`;
+  s+=line(cumArr,'stroke="#9AA1AC" stroke-width="1.4" stroke-dasharray="5 5" opacity="0.55"');
+  s+=line(fvArr,'stroke="#57A773" stroke-width="2.4"');
+  // payoff markers on the timeline
+  sim.loans.forEach(l=>{
+    if(l.months<=N && l.months>0){
+      s+=`<line x1="${X(l.months).toFixed(1)}" y1="${T}" x2="${X(l.months).toFixed(1)}" y2="${T+ph}" stroke="#C39A5B" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/>`;
+      s+=`<text x="${X(l.months).toFixed(1)}" y="${T+11}" text-anchor="middle" fill="#C39A5B" font-size="9.5" font-family="IBM Plex Mono">⚑</text>`;
+    }
+  });
+  $('wchart').innerHTML=`<defs><linearGradient id="wfill" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#57A773" stop-opacity="0.18"/>
+    <stop offset="1" stop-color="#57A773" stop-opacity="0.02"/></linearGradient></defs>`+s;
+}
+
+/* ============================================================
+   main loop
+============================================================ */
+function recompute(){
+  $('vStart').textContent=fmt(S.start);
+  $('vBuffer').textContent=fmt(S.buffer);
+  const scen = simulate(S);
+  const base = simulate(baselineParams());
+  renderMetrics(scen);
+  renderChart(scen, base);
+  renderLoans(scen);
+  renderWealth(scen);
+  $('spendTotal').textContent = fmt(scen.catTotal)+' / mo';
+  persist();
+}
+$('btnReset').addEventListener('click',()=>{
+  const keep={start:S.start,buffer:S.buffer,billMode:S.billMode};
+  S=Object.assign(defaultState(),keep);
+  buildControls(); buildLoanCards(); recompute();
+});
+let rzT;
+window.addEventListener('resize',()=>{ clearTimeout(rzT); rzT=setTimeout(recompute,150); });
+buildControls();
+buildLoanCards();
+recompute();
+</script>
+</body>
+</html>
