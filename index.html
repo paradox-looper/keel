@@ -53,8 +53,14 @@ button.ghost{
   font-family:var(--mono);font-size:12px;padding:9px 16px;border-radius:7px;
   cursor:pointer;transition:border-color .15s,color .15s;letter-spacing:.03em;
 }
-button.ghost:hover{border-color:var(--brass);color:var(--brass)}
-button.ghost:focus-visible,input:focus-visible,.chip:focus-visible,.cat-head:focus-visible{
+a.ghost{
+  display:inline-block;background:none;border:1px solid var(--seam);color:var(--bone-dim);
+  font-family:var(--mono);font-size:12px;padding:9px 16px;border-radius:7px;
+  text-decoration:none;transition:border-color .15s,color .15s;letter-spacing:.03em;
+}
+a.brass-link{border-color:var(--brass-dim);color:var(--brass)}
+a.ghost:hover,button.ghost:hover{border-color:var(--brass);color:var(--brass)}
+a.ghost:focus-visible,button.ghost:focus-visible,input:focus-visible,.chip:focus-visible,.cat-head:focus-visible{
   outline:2px solid var(--brass);outline-offset:2px;
 }
 
@@ -223,7 +229,8 @@ footer b{color:var(--brass-dim);font-weight:500}
     <p>The keel is what keeps a vessel steady in rough water. Adjust the levers below, watch the waterline — and steer the household from staying afloat to building wealth that outlasts you.</p>
   </div>
   <div class="hdr-actions">
-    <button class="ghost" id="btnReset" title="Restore your actual budget numbers">Reset to actuals</button>
+    <a class="ghost brass-link" href="ledger.html">Edit the ledger →</a>
+    <button class="ghost" id="btnReset" title="Restore your ledger's actual numbers">Reset to actuals</button>
   </div>
 </header>
 
@@ -320,10 +327,22 @@ footer b{color:var(--brass-dim);font-weight:500}
 
 <footer>
   <b>Anchors:</b> paychecks every other Thursday from Jul 16 2026 · stock distributions quarterly from Sep 8 2026 · bonus lands the second Thursday of May · category bills debit per the timing you choose · loan payments debit the 1st and stop the month each balance clears.<br>
-  Figures are after-tax and drawn from your own ledger. This is a planning instrument, not financial advice — the wealth projection assumes a steady average return and no taxes on growth; real markets move in swells.
+  Figures are after-tax and drawn from your own ledger — edit them any time via <a href="ledger.html" style="color:var(--brass-dim)">the ledger page</a>. This is a planning instrument, not financial advice — the wealth projection assumes a steady average return and no taxes on growth; real markets move in swells.
 </footer>
 
 </div>
+<script>
+/* If anything at all goes wrong in an unusual embedding environment,
+   surface it visibly rather than failing silent. */
+window.addEventListener('error', function(ev){
+  if(document.getElementById('errBanner')) return;
+  var b=document.createElement('div');
+  b.id='errBanner';
+  b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99;background:#C9584A;color:#14181E;font:12px/1.5 monospace;padding:10px 16px';
+  b.textContent='KEEL hit a snag in this viewer: '+(ev.message||'unknown error')+' — the app runs normally in a regular browser or on GitHub Pages.';
+  document.body && document.body.appendChild(b);
+});
+</script>
 <script>
 /* ============================================================
    KEEL — data
@@ -369,6 +388,33 @@ BASE.loans = [
   {id:'la', name:'Short-haul loan', balance:8435, rate:0.01, deadline:new Date(2027,9,1), deadlineLabel:'Oct 2027'},
   {id:'lb', name:'Long-haul loan', balance:30000, rate:0.071, deadline:null, deadlineMonths:120, deadlineLabel:'10 years'},
 ];
+
+/* the ledger (ledger.html) is the source of truth when present —
+   its saved values override the shipped defaults above */
+function loadLedger(){
+  try{
+    const raw = localStorage.getItem('keel-ledger'); if(!raw) return 0;
+    const Lg = JSON.parse(raw);
+    if(Lg.income){
+      if(+Lg.income.paycheck>0) BASE.paycheck=+Lg.income.paycheck;
+      if(+Lg.income.stock>=0) BASE.stock=+Lg.income.stock;
+      if(+Lg.income.bonus>=0) BASE.bonus=+Lg.income.bonus;
+    }
+    if(Array.isArray(Lg.categories)) Lg.categories.forEach(lc=>{
+      const c = BASE.categories.find(x=>x.id===lc.id); if(!c) return;
+      if(lc.name) c.name=String(lc.name);
+      if(Array.isArray(lc.items)) c.items = lc.items.map(i=>[String(i[0]), Math.max(+i[1]||0,0)]);
+      c.amount = c.items.reduce((s,i)=>s+i[1],0);
+    });
+    if(Array.isArray(Lg.loans)) Lg.loans.forEach(ll=>{
+      const l = BASE.loans.find(x=>x.id===ll.id); if(!l) return;
+      if(+ll.balance>0) l.balance=+ll.balance;
+      if(+ll.rate>=0 && +ll.rate<1) l.rate=+ll.rate;
+    });
+    return Lg.rev||1;
+  }catch(e){ return 0; }
+}
+const LEDGER_REV = loadLedger();
 function nextFirst(){ const t=new Date(); t.setHours(0,0,0,0); return new Date(t.getFullYear(), t.getMonth()+1, 1); }
 function monthsBetween(a,b){ return (b.getFullYear()-a.getFullYear())*12 + b.getMonth()-a.getMonth(); }
 function minPayment(P,annual,n){ const r=annual/12; return r>0 ? P*r/(1-Math.pow(1+r,-n)) : P/n; }
@@ -404,8 +450,13 @@ const defaultState = () => ({
 let S = defaultState();
 try{
   const saved = localStorage.getItem('keel-state');
-  if(saved){ S = Object.assign(defaultState(), JSON.parse(saved)); }
+  if(saved){
+    const P = JSON.parse(saved);
+    // scenario positions only carry over if they were set against this ledger revision
+    if((P.ledgerRev||0) === LEDGER_REV){ S = Object.assign(defaultState(), P); }
+  }
 }catch(e){}
+S.ledgerRev = LEDGER_REV;
 function persist(){ try{ localStorage.setItem('keel-state', JSON.stringify(S)); }catch(e){} }
 
 /* ============================================================

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KEEL — The Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14181E; --iron:#1C222B; --iron-2:#202834; --seam:#2B333F;
+  --bone:#EAE4D6; --bone-dim:#9AA1AC; --brass:#C39A5B; --brass-dim:#8A6E42;
+  --moss:#57A773; --rust:#C9584A; --radius:10px;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;
+  --disp:'Big Shoulders Display',var(--sans);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--ink);color:var(--bone);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;padding-bottom:96px}
+.wrap{max-width:980px;margin:0 auto;padding:0 20px}
+
+header{display:flex;align-items:flex-end;justify-content:space-between;padding:34px 0 22px;border-bottom:1px solid var(--seam);gap:16px;flex-wrap:wrap}
+.brand h1{font-family:var(--disp);font-weight:700;font-size:44px;line-height:.9;letter-spacing:.04em}
+.brand h1 span{color:var(--brass)}
+.brand p{color:var(--bone-dim);font-size:13px;margin-top:8px;max-width:520px}
+a.ghost,button.ghost{
+  display:inline-block;background:none;border:1px solid var(--seam);color:var(--bone-dim);
+  font-family:var(--mono);font-size:12px;padding:9px 16px;border-radius:7px;cursor:pointer;
+  text-decoration:none;transition:border-color .15s,color .15s;letter-spacing:.03em;
+}
+a.ghost:hover,button.ghost:hover{border-color:var(--brass);color:var(--brass)}
+a.ghost:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+
+.sec{margin-top:40px}
+.sec-label{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.sec-label h2{font-family:var(--disp);font-weight:600;font-size:24px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.sec-label .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--brass-dim),transparent)}
+.sec-label .note{font-family:var(--mono);font-size:11px;color:var(--bone-dim);white-space:nowrap}
+
+.panel{background:var(--iron);border:1px solid var(--seam);border-radius:var(--radius);padding:18px 20px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.chart-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.chart-head h3{font-family:var(--disp);font-size:18px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.cat-total{font-family:var(--mono);font-size:13px;color:var(--brass);font-weight:600}
+
+input.field{
+  background:var(--iron-2);border:1px solid var(--seam);border-radius:7px;color:var(--bone);
+  font-family:var(--mono);font-size:13px;padding:8px 10px;width:100%;transition:border-color .15s;
+}
+input.field:hover{border-color:#3a4450}
+input.field:focus{border-color:var(--brass);outline:none}
+input.amt{text-align:right;width:110px;flex:none}
+input.iname{flex:1;min-width:0}
+
+.irow{display:flex;gap:8px;align-items:center;padding:4px 0}
+.idel{
+  background:none;border:1px solid var(--seam);color:var(--bone-dim);border-radius:6px;
+  width:30px;height:32px;cursor:pointer;font-family:var(--mono);font-size:12px;flex:none;
+  transition:border-color .15s,color .15s;
+}
+.idel:hover{border-color:var(--rust);color:var(--rust)}
+button.add{
+  margin-top:8px;background:none;border:1px dashed var(--seam);color:var(--bone-dim);
+  font-family:var(--mono);font-size:11.5px;padding:7px 12px;border-radius:7px;cursor:pointer;width:100%;
+  transition:border-color .15s,color .15s;
+}
+button.add:hover{border-color:var(--brass);color:var(--brass)}
+
+.frow{display:flex;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--seam)}
+.frow:last-child{border-bottom:none}
+.frow .lbl{flex:1}
+.frow .lbl .n{font-size:13.5px;font-weight:500}
+.frow .lbl .d{font-family:var(--mono);font-size:11px;color:var(--bone-dim);margin-top:2px}
+.frow .unit{font-family:var(--mono);font-size:12px;color:var(--bone-dim)}
+
+.savebar{
+  position:fixed;left:0;right:0;bottom:0;background:rgba(20,24,30,.92);backdrop-filter:blur(8px);
+  border-top:1px solid var(--seam);padding:12px 20px;z-index:50;
+}
+.savebar .inner{max-width:980px;margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+button.primary{
+  background:var(--brass);color:var(--ink);border:1px solid var(--brass);
+  font-family:var(--mono);font-size:13px;font-weight:600;padding:10px 22px;border-radius:7px;
+  cursor:pointer;letter-spacing:.03em;transition:filter .15s;
+}
+button.primary:hover{filter:brightness(1.1)}
+#status{font-family:var(--mono);font-size:12px;color:var(--bone-dim)}
+#status.dirty{color:var(--rust)}
+#status.saved{color:var(--moss)}
+.spacer{flex:1}
+
+footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--seam);font-family:var(--mono);font-size:11px;color:var(--bone-dim);line-height:2}
+footer b{color:var(--brass-dim);font-weight:500}
+
+@media(max-width:760px){
+  .grid2{grid-template-columns:1fr}
+  .brand h1{font-size:36px}
+  input.amt{width:96px}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brand">
+    <h1>THE LEDGER<span>.</span></h1>
+    <p>The source of truth. Every figure here becomes the "actuals" that KEEL's sliders and charts are anchored to. Edit, then hit <b style="color:var(--brass);font-weight:500">Save ledger</b> below.</p>
+  </div>
+  <a class="ghost" href="index.html">← Back to KEEL</a>
+</header>
+
+<section class="sec">
+  <div class="sec-label"><h2>Income</h2><div class="rule"></div><span class="note">after-tax figures</span></div>
+  <div class="panel" id="incomePanel"></div>
+</section>
+
+<section class="sec">
+  <div class="sec-label"><h2>Monthly spend</h2><div class="rule"></div><span class="note" id="grandTotal"></span></div>
+  <div class="grid2" id="catGrid"></div>
+</section>
+
+<section class="sec">
+  <div class="sec-label"><h2>The Ballast</h2><div class="rule"></div><span class="note">balances &amp; rates · deadlines are fixed terms</span></div>
+  <div class="grid2" id="loanGrid"></div>
+</section>
+
+<footer>
+  <b>How persistence works:</b> your ledger lives in this browser's local storage — it survives refreshes, restarts, and site updates, and never leaves your device. To back it up or move to another device, use <b>Export</b> to download a JSON file and <b>Import</b> to load it there. Restore defaults returns the ledger to the numbers the app shipped with.
+</footer>
+
+</div>
+
+<div class="savebar"><div class="inner">
+  <button class="primary" id="btnSave">Save ledger</button>
+  <span id="status">No changes</span>
+  <span class="spacer"></span>
+  <button class="ghost" id="btnExport">Export</button>
+  <button class="ghost" id="btnImport">Import</button>
+  <input type="file" id="fileImport" accept=".json,application/json" style="display:none">
+  <button class="ghost" id="btnRestore">Restore defaults</button>
+</div></div>
+
+<script>
+/* ============================================================
+   defaults — the numbers the app shipped with
+============================================================ */
+const DEFAULTS = {
+  income: { paycheck:3030, stock:4400, bonus:10000 },
+  categories: [
+    {id:'housing', name:'Housing', items:[
+      ['Mortgage',2905.77],['Cellular service',364.97],['Electric',145.00],
+      ['Internet',145.65],['Natural gas',140.00],['Trash & water',125.00],
+      ['Home maintenance',100.00],['Pest control',76.82]]},
+    {id:'basic', name:'Groceries & essentials', items:[
+      ['Groceries',1000.00],['Pet care',100.00],['Household care',80.00],['Hygiene',50.00]]},
+    {id:'auto', name:'Automotive', items:[
+      ['Allstate insurance',346.00],['Fuel',200.00],['Armada payment',200.00],['Maintenance',100.00]]},
+    {id:'lux', name:'Lifestyle', items:[
+      ['Restaurants',100.00],['Date nights',100.00],['Coffee & lunch',100.00],
+      ['Spending — TD',87.97],['Spending — MW',64.67],['Clothing',50.00]]},
+    {id:'kids', name:'Children', items:[
+      ['Support',200.00],['Arthur flights',175.00],['Planet Fitness',50.48]]},
+    {id:'debt', name:'Debts', items:[
+      ['Student loans — Wes',379.00],['Credit card',0.00]]},
+    {id:'save', name:'Sinking funds', items:[
+      ['Birthdays',83.33],['Christmas',83.33],['Vacation',83.33],['Emergencies',83.33]]},
+    {id:'health', name:'Health', items:[
+      ['Supplements',100.00],['Co-pays',50.00],['Medications',50.00]]},
+    {id:'subs', name:'Apps & subscriptions', items:[
+      ['Claude',20.00],['Netflix',19.74],['Audible',16.00],['Pandora',12.03],['Spotify',11.99],
+      ['Prime',11.58],['iCloud+',9.99],['Office 365',8.33],['Prime ad-free',4.99],['Walmart+',4.08],
+      ['AppleCare+ iPad',3.49],['Human Design',3.34],['LastPass',3.00],['AllTrails',3.00],
+      ['Google One — MW',1.99],['Google One — TD',1.67]]},
+  ],
+  loans: [
+    {id:'la', name:'Short-haul loan', balance:8435, rate:0.01, deadlineLabel:'Oct 2027'},
+    {id:'lb', name:'Long-haul loan', balance:30000, rate:0.071, deadlineLabel:'10 years'},
+  ],
+};
+
+const KEY='keel-ledger';
+const $=id=>document.getElementById(id);
+const fmt=n=>(n<0?'−$':'$')+Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const deep=o=>JSON.parse(JSON.stringify(o));
+
+let L = deep(DEFAULTS), REV = 0;
+try{
+  const raw=localStorage.getItem(KEY);
+  if(raw){
+    const p=JSON.parse(raw);
+    if(p && p.income && Array.isArray(p.categories)){ 
+      L = { income:Object.assign(deep(DEFAULTS.income),p.income),
+            categories: p.categories, loans: p.loans||deep(DEFAULTS.loans) };
+      REV = p.rev||1;
+    }
+  }
+}catch(e){}
+
+let dirty=false;
+function setStatus(cls,txt){ const s=$('status'); s.className=cls; s.textContent=txt; }
+function markDirty(){ if(!dirty){ dirty=true; setStatus('dirty','Unsaved changes'); } }
+window.addEventListener('beforeunload',e=>{ if(dirty){ e.preventDefault(); e.returnValue=''; } });
+
+/* ============================================================
+   render
+============================================================ */
+function num(v){ const n=parseFloat(String(v).replace(/[$,\s]/g,'')); return isFinite(n)&&n>=0?n:0; }
+
+function render(){
+  // income
+  const inc=[
+    {k:'paycheck', n:'Paycheck', d:'every other Thursday · anchored Jul 16 2026'},
+    {k:'stock', n:'Stock distribution', d:'quarterly · next Sep 8 2026'},
+    {k:'bonus', n:'Annual bonus', d:'second Thursday of May'},
+  ];
+  $('incomePanel').innerHTML = inc.map(r=>`
+    <div class="frow">
+      <div class="lbl"><div class="n">${r.n}</div><div class="d">${r.d}</div></div>
+      <span class="unit">$</span>
+      <input class="field amt" data-inc="${r.k}" inputmode="decimal" value="${L.income[r.k]}">
+    </div>`).join('');
+
+  // categories
+  $('catGrid').innerHTML = L.categories.map((c,ci)=>`
+    <div class="panel">
+      <div class="chart-head"><h3>${c.name}</h3><span class="cat-total" id="ct-${c.id}"></span></div>
+      <div id="items-${c.id}">${c.items.map((it,ii)=>itemRow(ci,ii,it)).join('')}</div>
+      <button class="add" data-add="${ci}">+ add line item</button>
+    </div>`).join('');
+
+  // loans
+  $('loanGrid').innerHTML = L.loans.map((l,li)=>`
+    <div class="panel">
+      <div class="chart-head"><h3>${l.name}</h3><span class="cat-total">due ${l.deadlineLabel}</span></div>
+      <div class="frow">
+        <div class="lbl"><div class="n">Balance</div><div class="d">remaining principal today</div></div>
+        <span class="unit">$</span>
+        <input class="field amt" data-loan="${li}" data-f="balance" inputmode="decimal" value="${l.balance}">
+      </div>
+      <div class="frow">
+        <div class="lbl"><div class="n">Interest rate</div><div class="d">annual percentage rate</div></div>
+        <input class="field amt" data-loan="${li}" data-f="rate" inputmode="decimal" value="${(l.rate*100).toFixed(2)}" style="width:80px">
+        <span class="unit">% APR</span>
+      </div>
+    </div>`).join('');
+
+  wire(); totals();
+}
+function itemRow(ci,ii,it){
+  return `<div class="irow" data-ci="${ci}" data-ii="${ii}">
+    <input class="field iname" value="${String(it[0]).replace(/"/g,'&quot;')}" aria-label="line item name">
+    <span class="unit">$</span>
+    <input class="field amt" inputmode="decimal" value="${it[1]}" aria-label="line item amount">
+    <button class="idel" title="remove">✕</button>
+  </div>`;
+}
+function totals(){
+  let grand=0;
+  L.categories.forEach(c=>{
+    const t=c.items.reduce((s,it)=>s+num(it[1]),0);
+    grand+=t;
+    const el=$('ct-'+c.id); if(el) el.textContent=fmt(t)+' / mo';
+  });
+  $('grandTotal').textContent='total '+fmt(grand)+' / mo';
+}
+
+/* ============================================================
+   wiring — inputs mutate the in-memory ledger, totals live-update
+============================================================ */
+function wire(){
+  document.querySelectorAll('[data-inc]').forEach(inp=>{
+    inp.addEventListener('input',()=>{ L.income[inp.dataset.inc]=num(inp.value); markDirty(); });
+  });
+  document.querySelectorAll('.irow').forEach(row=>{
+    const ci=+row.dataset.ci, ii=+row.dataset.ii;
+    const [nameI, , amtI, delB] = row.children;
+    nameI.addEventListener('input',()=>{ L.categories[ci].items[ii][0]=nameI.value; markDirty(); });
+    amtI.addEventListener('input',()=>{ L.categories[ci].items[ii][1]=num(amtI.value); totals(); markDirty(); });
+    delB.addEventListener('click',()=>{ L.categories[ci].items.splice(ii,1); markDirty(); render(); });
+  });
+  document.querySelectorAll('[data-add]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      L.categories[+btn.dataset.add].items.push(['New item',0]); markDirty(); render();
+      const rows=$('items-'+L.categories[+btn.dataset.add].id).querySelectorAll('.iname');
+      const last=rows[rows.length-1]; if(last){ last.focus(); last.select(); }
+    });
+  });
+  document.querySelectorAll('[data-loan]').forEach(inp=>{
+    inp.addEventListener('input',()=>{
+      const l=L.loans[+inp.dataset.loan];
+      if(inp.dataset.f==='balance') l.balance=num(inp.value);
+      else l.rate=num(inp.value)/100;
+      markDirty();
+    });
+  });
+}
+
+/* ============================================================
+   save / export / import / restore
+============================================================ */
+function save(){
+  REV++;
+  const payload=Object.assign({rev:REV, updatedAt:new Date().toISOString()}, deep(L));
+  try{
+    localStorage.setItem(KEY, JSON.stringify(payload));
+    dirty=false;
+    setStatus('saved','Saved — KEEL will use these as actuals');
+  }catch(e){ setStatus('dirty','Save failed — storage unavailable'); }
+}
+$('btnSave').addEventListener('click',save);
+
+$('btnExport').addEventListener('click',()=>{
+  const payload=Object.assign({rev:REV, updatedAt:new Date().toISOString()}, deep(L));
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='keel-ledger.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+$('btnImport').addEventListener('click',()=>$('fileImport').click());
+$('fileImport').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const p=JSON.parse(r.result);
+      if(!p || !p.income || !Array.isArray(p.categories)) throw new Error('bad shape');
+      L={ income:Object.assign(deep(DEFAULTS.income),p.income),
+          categories:p.categories, loans:p.loans||deep(DEFAULTS.loans) };
+      markDirty(); render();
+      setStatus('dirty','Imported — hit Save ledger to keep it');
+    }catch(err){ setStatus('dirty','Import failed — not a valid ledger file'); }
+    e.target.value='';
+  };
+  r.readAsText(f);
+});
+
+$('btnRestore').addEventListener('click',()=>{
+  if(!confirm('Restore the ledger to the numbers the app shipped with? Your saved values will be replaced on the next Save.')) return;
+  L=deep(DEFAULTS); markDirty(); render();
+  setStatus('dirty','Defaults restored — hit Save ledger to keep them');
+});
+
+render();
+</script>
+</body>
+</html>
